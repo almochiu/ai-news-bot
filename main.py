@@ -3,6 +3,7 @@ import json
 import smtplib
 import time
 import urllib.request
+from urllib.parse import urlencode
 from datetime import datetime
 import pytz
 from email.mime.text import MIMEText
@@ -19,27 +20,46 @@ TAIPEI_TZ = pytz.timezone("Asia/Taipei")
 
 
 def fetch_raw_news():
-    cutoff = int(time.time()) - (48 * 3600)  # 48 小時內
-    urls = [
-        f"https://hn.algolia.com/api/v1/search?query=OpenAI+Google+DeepMind+Meta+Microsoft+NVIDIA+Anthropic&tags=story&hitsPerPage=30&numericFilters=created_at_i%3E{cutoff}",
-        f"https://hn.algolia.com/api/v1/search?query=xAI+Apple+AI+Amazon+AI+LLM&tags=story&hitsPerPage=20&numericFilters=created_at_i%3E{cutoff}",
-        f"https://hn.algolia.com/api/v1/search?query=artificial+intelligence+machine+learning&tags=story&hitsPerPage=20&numericFilters=created_at_i%3E{cutoff}",
+    cutoff = int(time.time()) - (7 * 24 * 3600)  # 7 天內
+    queries = [
+        "OpenAI Google DeepMind Meta Microsoft NVIDIA Anthropic AI",
+        "xAI Apple AI Amazon LLM GPT Claude Gemini",
+        "artificial intelligence machine learning",
     ]
     all_hits = []
-    for url in urls:
+    for query in queries:
+        params = urlencode({
+            "query": query,
+            "tags": "story",
+            "hitsPerPage": 30,
+            "numericFilters": f"created_at_i>{cutoff}",
+        })
+        url = f"https://hn.algolia.com/api/v1/search?{params}"
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             all_hits.extend(data.get("hits", []))
 
+    # 若 7 天內結果不足，補充近期高分新聞
+    if len(all_hits) < 10:
+        params = urlencode({"query": "AI artificial intelligence", "tags": "story", "hitsPerPage": 30})
+        url = f"https://hn.algolia.com/api/v1/search?{params}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            all_hits.extend(data.get("hits", []))
+
+    # 依照日期排序（最新優先），去重
+    all_hits.sort(key=lambda x: x.get("created_at_i", 0), reverse=True)
     seen = set()
     unique = []
-    for hit in sorted(all_hits, key=lambda x: x.get("points", 0), reverse=True):
+    for hit in all_hits:
         title = hit.get("title", "")
         if title and title not in seen:
             seen.add(title)
             unique.append(hit)
 
+    print(f"Total unique hits: {len(unique)}")
     return unique[:30]
 
 
