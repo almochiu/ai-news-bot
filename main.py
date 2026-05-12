@@ -133,7 +133,7 @@ def shorten_url(url):
     if not url:
         return url
     try:
-        api = f"https://tinyurl.com/api-create.php?url={urllib.parse.quote(url, safe='')}"
+        api = f"https://is.gd/create.php?format=simple&url={urllib.parse.quote(url, safe='')}"
         req = urllib.request.Request(api, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(req, timeout=8) as resp:
             short = resp.read().decode("utf-8").strip()
