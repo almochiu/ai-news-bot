@@ -3,6 +3,7 @@ import json
 import smtplib
 import time
 import urllib.request
+import urllib.parse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
@@ -128,14 +129,31 @@ def fetch_rss_news():
     return unique[:35]
 
 
+def shorten_url(url):
+    if not url:
+        return url
+    try:
+        api = f"https://tinyurl.com/api-create.php?url={urllib.parse.quote(url, safe='')}"
+        req = urllib.request.Request(api, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            short = resp.read().decode("utf-8").strip()
+            return short if short.startswith("http") else url
+    except Exception:
+        return url
+
+
 def format_with_claude(articles):
     today = datetime.now(TAIPEI_TZ).strftime("%Y-%m-%d")
 
     if not articles:
         return f"🤖 AI 科技產業動態 - {today}\n\n今日暫無最新動態，請明日再查看。"
 
+    print("Shortening URLs...")
+    for a in articles:
+        a["short_url"] = shorten_url(a["url"])
+
     news_list = "\n".join(
-        f"{i+1}. [{a['source']}] {a['title']} ({a['date']})\n   {a['url']}"
+        f"{i+1}. [{a['source']}] {a['title']} ({a['date']})\n   {a['short_url']}"
         for i, a in enumerate(articles)
     )
 
