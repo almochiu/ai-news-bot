@@ -21,12 +21,23 @@ TAIPEI_TZ = pytz.timezone("Asia/Taipei")
 UTC = pytz.utc
 
 RSS_FEEDS = [
+    # 科技媒體 AI 頻道
     ("TechCrunch AI", "https://techcrunch.com/category/artificial-intelligence/feed/"),
     ("The Verge AI", "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"),
     ("VentureBeat AI", "https://venturebeat.com/category/ai/feed/"),
     ("Wired AI", "https://www.wired.com/feed/category/artificial-intelligence/latest/rss"),
     ("Ars Technica", "https://feeds.arstechnica.com/arstechnica/technology-lab"),
-    ("MIT Tech Review AI", "https://www.technologyreview.com/feed/"),
+    ("MIT Tech Review", "https://www.technologyreview.com/feed/"),
+    ("Reuters Tech", "https://feeds.reuters.com/reuters/technologyNews"),
+    # AI 公司官方部落格
+    ("OpenAI Blog", "https://openai.com/blog/rss.xml"),
+    ("Google DeepMind", "https://deepmind.google/blog/rss.xml"),
+    ("Google AI Blog", "https://blog.research.google/feeds/posts/default"),
+    ("Meta AI", "https://ai.meta.com/blog/feed/"),
+    ("Microsoft AI", "https://blogs.microsoft.com/ai/feed/"),
+    # xAI / Grok 相關（透過媒體追蹤）
+    ("Electrek/xAI", "https://electrek.co/tag/xai/feed/"),
+    ("The Information AI", "https://www.theinformation.com/feed"),
 ]
 
 
@@ -147,7 +158,7 @@ def format_with_claude(articles):
 
 （依此格式列出全部 10 則）
 
-選取原則：優先選 OpenAI、Google、Anthropic、Microsoft、Meta、Apple、NVIDIA、xAI 等科技巨頭相關動態；若不足 10 則，從其他 AI 技術新聞補足。必須輸出 10 則，不可少於 10 則。
+選取原則：優先選以下公司的最新動態 —— OpenAI、Google DeepMind、Anthropic、Microsoft、Meta AI、Apple、NVIDIA、xAI（Grok）、Amazon AWS AI。xAI 與 Grok 相關新聞請特別留意納入。若不足 10 則，從其他重要 AI 技術新聞補足。必須輸出 10 則，不可少於 10 則。
 
 新聞列表：
 {news_list}""",
