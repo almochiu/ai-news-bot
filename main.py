@@ -1,6 +1,7 @@
 import os
 import json
 import smtplib
+import time
 import urllib.request
 from datetime import datetime
 import pytz
@@ -18,9 +19,11 @@ TAIPEI_TZ = pytz.timezone("Asia/Taipei")
 
 
 def fetch_raw_news():
+    cutoff = int(time.time()) - (48 * 3600)  # 48 小時內
     urls = [
-        "https://hn.algolia.com/api/v1/search?query=OpenAI+Google+DeepMind+Meta+Microsoft+NVIDIA+Anthropic+AI&tags=story&hitsPerPage=30",
-        "https://hn.algolia.com/api/v1/search?query=xAI+Apple+AI+Amazon+AI&tags=story&hitsPerPage=20",
+        f"https://hn.algolia.com/api/v1/search?query=OpenAI+Google+DeepMind+Meta+Microsoft+NVIDIA+Anthropic&tags=story&hitsPerPage=30&numericFilters=created_at_i%3E{cutoff}",
+        f"https://hn.algolia.com/api/v1/search?query=xAI+Apple+AI+Amazon+AI+LLM&tags=story&hitsPerPage=20&numericFilters=created_at_i%3E{cutoff}",
+        f"https://hn.algolia.com/api/v1/search?query=artificial+intelligence+machine+learning&tags=story&hitsPerPage=20&numericFilters=created_at_i%3E{cutoff}",
     ]
     all_hits = []
     for url in urls:
@@ -37,7 +40,7 @@ def fetch_raw_news():
             seen.add(title)
             unique.append(hit)
 
-    return unique[:25]
+    return unique[:30]
 
 
 def format_with_claude(hits):
@@ -69,6 +72,8 @@ def format_with_claude(hits):
 （依此格式列出全部 10 則，不要其他說明文字）
 
 優先選取與 OpenAI、Google DeepMind、Anthropic、Microsoft、Meta AI、Apple、NVIDIA、xAI 等 AI 科技巨頭相關的新聞。
+如果沒有足夠的科技巨頭新聞，請從列表中選取最相關的 AI 技術動態補足 10 則。
+無論新聞品質如何，都必須輸出完整的 10 則，不可以拒絕或說明無法完成。
 
 新聞列表：
 {chr(10).join(news_list)}""",
